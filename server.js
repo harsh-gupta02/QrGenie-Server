@@ -10,19 +10,24 @@ const port = process.env.PORT || 3000
 
 app.use(cors())
 
-const toString = (data) => {
-    if (typeof data !== 'string') {
-        req.body.url = JSON.stringify(data)
-    }
-}
+// const toString = (data) => {
+//     if (typeof data !== 'string') {
+//         data = JSON.stringify(data)
+//     }
+//     console.log("final data for qr code", data)
+// }
 const validateType = (req, res, next) => {
-    if (req.body) {
-        if(req.body.url) {
-            toString(req.body.url)
+    if (req.body.data) {
+        if(req.body.data.url || req.body.data.text) {
+            // toString(req.body.data)
+            req.body.data = req.body.data.url || req.body.data.text
         }
-        else if(req.body.text) {
-            req.body.url = req.body.data
-            delete req.body.data
+        else if(req.body.data.ssid && req.body.data.encryptionType) {
+            const ssid = req.body.data.ssid
+            const encryptionType = req.body.data.encryptionType
+            const networkPassword = req.body.data.networkPassword
+            const hiddenNetwork = req.body.data.hiddenNetwork
+            req.body.data = `WIFI:T:${encryptionType || 'WPA'};S:${ssid};P:${networkPassword};H:${hiddenNetwork};`
         }
         next()
     } else {
@@ -36,7 +41,7 @@ app.get('/', (req, res) => {
 
 app.post('/generate', validateType, async (req, res) => {
     try {
-        const data = req.body.url
+        const data = req.body.data
         const qrCode = await qrcode.toDataURL(data, {width: 165})
         res.send({ qrCode })
     }
