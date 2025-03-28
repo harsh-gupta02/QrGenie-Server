@@ -10,16 +10,9 @@ const port = process.env.PORT || 3000
 
 app.use(cors())
 
-// const toString = (data) => {
-//     if (typeof data !== 'string') {
-//         data = JSON.stringify(data)
-//     }
-//     console.log("final data for qr code", data)
-// }
 const validateType = (req, res, next) => {
     if (req.body.data) {
         if(req.body.data.url || req.body.data.text) {
-            // toString(req.body.data)
             req.body.data = req.body.data.url || req.body.data.text
         }
         else if(req.body.data.ssid && req.body.data.encryptionType) {
@@ -47,6 +40,23 @@ app.post('/generate', validateType, async (req, res) => {
     }
     catch (error) {
         res.status(500).send({ error: 'Internal server error' })
+    }
+})
+
+app.get('/countries', async (req, res) => {
+    const options = {
+        method: 'GET',
+        url: process.env.RAPIDAPI_URL,
+        headers: {
+            'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+            'x-rapidapi-host': process.enc.RAPIDAPI_HOST
+        }
+    }
+    try {
+        const response = await axios.request(options)
+        res.json(response.data)
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch countries', details: error.message })
     }
 })
 
